@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "husdata-h66-modbus"
+version = "0.1.0"
+description = "Async Modbus TCP library for the Husdata H66 heat pump gateway"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.13"
+authors = [
+    {name = "Jonny Bergdahl", email = "bergdahl@users.noreply.github.com"},
+]
+keywords = ["husdata", "h66", "modbus", "heat pump", "ivt", "rego", "home assistant"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Home Automation",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "modbus-connection>=4.12",
+]
+
+[project.optional-dependencies]
+cli = ["modbus-connection[pymodbus]>=4.12"]
+
+[project.urls]
+Homepage = "https://github.com/jonnybergdahl/Python-husdata-h66-modbus"
+Repository = "https://github.com/jonnybergdahl/Python-husdata-h66-modbus"
+Documentation = "https://jonnybergdahl.github.io/husdata-h66-modbus/"
+Issues = "https://github.com/jonnybergdahl/Python-husdata-h66-modbus/issues"
+
+[project.scripts]
+husdata-h66 = "husdata_h66.__main__:main"
+
+[dependency-groups]
+dev = [
+    "modbus-connection[pymodbus]>=4.12",
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+]
+docs = [
+    "sphinx>=8",
+    "sphinx-autodoc-typehints>=2",
+    "sphinx-rtd-theme>=3",
+]
+release = [
+    "build>=1.2",
+    "twine>=6",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+husdata_h66 = ["py.typed"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
