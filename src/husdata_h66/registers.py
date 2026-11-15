@@ -100,6 +100,11 @@ class Register:
     minimum: float | None = None
     maximum: float | None = None
     step: float | None = None
+    options: tuple[int, ...] | None = None
+    """The only values the setting accepts, when they aren't a plain range."""
+
+    write_only: bool = False
+    """The value read back means nothing (Husdata: "no read")."""
 
     @property
     def signed(self) -> bool:
@@ -127,10 +132,13 @@ class _Known:
     minimum: float | None = None
     maximum: float | None = None
     step: float | None = None
+    options: tuple[int, ...] | None = None
+    write_only: bool = False
 
 
-# Husdata variables this library knows by ID. Ranges come from the Rego 600
-# settings as exposed by the H66.
+# Husdata variables this library knows by ID. Ranges and meanings come from
+# Husdata's "IVT Rego 600 / 637 Controllers" variable list for the H66
+# (https://online.husdata.se/h-docs/C00.pdf, 2026-01-14).
 KNOWN_VARIABLES: dict[str, _Known] = {
     # Temperatures
     "0001": _Known(key="radiator_return"),
@@ -154,8 +162,11 @@ KNOWN_VARIABLES: dict[str, _Known] = {
     "1A04": _Known(key="pump_cold_circuit"),
     "1A05": _Known(key="pump_heat_circuit"),
     "1A06": _Known(key="pump_radiator"),
+    # Off: radiator heating, on: hot water production.
     "1A07": _Known(key="switch_valve_1"),
     "1A20": _Known(key="alarm"),
+    # The last alarm that triggered, even if no alarm is active now. See
+    # ALARM_CODES.
     "BA91": _Known(key="alarm_code"),
     # Operating hours and calculated power
     "6C55": _Known(key="compressor_hours_heating"),
@@ -174,13 +185,56 @@ KNOWN_VARIABLES: dict[str, _Known] = {
     "0208": _Known(key="hot_water_stop_temperature", minimum=20, maximum=60, step=0.1),
     "020B": _Known(key="hot_water_difference", minimum=2, maximum=15, step=0.1),
     "7209": _Known(key="extra_hot_water", minimum=0, maximum=1440, step=1),
+    # Takes effect the next time the electric heater would start.
     "1215": _Known(key="electric_heater_allowed", minimum=0, maximum=1, step=1),
-    "B21B": _Known(key="electric_heater_max_power", minimum=1, maximum=4, step=1),
-    "1233": _Known(key="external_control", minimum=0, maximum=1, step=1),
+    # 1 allows 3 kW, 2 allows 6 kW, 4 allows 9 kW.
+    "B21B": _Known(
+        key="electric_heater_max_power", minimum=1, maximum=4, options=(1, 2, 4)
+    ),
+    # Write-only; Husdata warns it can behave unpredictably on a Rego 600.
+    "1233": _Known(
+        key="external_control", minimum=0, maximum=1, step=1, write_only=True
+    ),
     "020A": _Known(key="summer_mode", minimum=0, maximum=30, step=0.1),
-    "2210": _Known(key="holiday_mode", minimum=0, maximum=30, step=0.1),
+    # Days. While it is active, set it to 0 before setting a new value. The
+    # scale (0.1 like other 2xxx numbers) is not verified yet.
+    "2210": _Known(key="holiday_mode", unit="d", minimum=0, maximum=30, step=1),
+    # Writing 0 resets an alarm: the heat pump turns off for 10 s and back on.
     "12F2": _Known(key="alarm_reset", minimum=0, maximum=1, step=1),
 }
+
+ALARM_CODES: dict[int, str] = {
+    1: "Sensor radiator return (GT1)",
+    2: "Outdoor sensor (GT2)",
+    3: "Sensor hot water (GT3)",
+    4: "Mixing valve sensor (GT4)",
+    5: "Room sensor (GT5)",
+    6: "Sensor compressor (GT6)",
+    7: "Sensor heat fluid out (GT8)",
+    8: "Sensor heat fluid in (GT9)",
+    9: "Sensor cold fluid in (GT10)",
+    # Husdata's list says "in", but GT11 is the brine out sensor (see 19).
+    10: "Sensor cold fluid out (GT11)",
+    11: "Compressor circuit switch",
+    12: "Electrical cassette",
+    13: "Pump circuit switch (MB2)",
+    14: "Low pressure switch (LP)",
+    15: "High pressure switch (HP)",
+    16: "High return HP (GT9)",
+    17: "Heat carrier out max (GT8)",
+    18: "Brine in under limit (GT10)",
+    19: "Brine out under limit (GT11)",
+    20: "Compressor superheat (GT6)",
+    21: "3-phase incorrect order",
+    22: "Power failure",
+    23: "Heat delta exceeded",
+}
+"""Rego 600/637 alarm codes as reported in ``alarm_code`` (BA91), from Husdata."""
+
+
+def alarm_text(code: int | None) -> str | None:
+    """Return the description of a Rego alarm code, or ``None`` if unknown."""
+    return None if code is None else ALARM_CODES.get(code)
 
 
 def _slug(name: str) -> str:
@@ -222,6 +276,8 @@ def make_register(
         minimum=known.minimum,
         maximum=known.maximum,
         step=known.step,
+        options=known.options,
+        write_only=known.write_only,
     )
 
 

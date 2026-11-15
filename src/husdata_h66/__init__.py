@@ -2,18 +2,21 @@
 
 from .device import HusdataH66
 from .registers import (
+    ALARM_CODES,
     KNOWN_VARIABLES,
     MAX_REGISTERS_PER_REQUEST,
     NO_SENSOR,
     REGO600_REGISTERS,
     Register,
     VariableKind,
+    alarm_text,
     kind_from_variable_id,
     make_register,
 )
 from .web import parse_controller, parse_firmware_version, parse_registers
 
 __all__ = [
+    "ALARM_CODES",
     "KNOWN_VARIABLES",
     "MAX_REGISTERS_PER_REQUEST",
     "NO_SENSOR",
@@ -21,6 +24,7 @@ __all__ = [
     "HusdataH66",
     "Register",
     "VariableKind",
+    "alarm_text",
     "kind_from_variable_id",
     "make_register",
     "parse_controller",

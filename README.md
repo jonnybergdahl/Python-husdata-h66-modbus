@@ -65,7 +65,7 @@ entry.runtime_data = HusdataH66(unit)
 
 `async_update()` reads all registers in three requests and returns an `UpdateReport`. It raises `ModbusConnectionError` or `ModbusTimeoutError` when the gateway cannot be reached.
 
-`async_set()` takes the value in the register's own unit and checks it against the register's range and step. It raises `ValueError` for an invalid value and `AttributeError` for a read-only register. `async_reset_alarm()` writes 1 to **Alarm reset**.
+`async_set()` takes the value in the register's own unit and checks it against the register's range and step. It raises `ValueError` for an invalid value and `AttributeError` for a read-only register. `async_reset_alarm()` writes 0 to **Alarm reset**, which turns the heat pump off for 10 seconds and then on again.
 
 From the command line (read-only):
 
@@ -130,20 +130,20 @@ Temperatures and numbers are signed, the others unsigned. A temperature sensor t
 | 19 | Holding | 020B | `hot_water_difference` | 2–15 °C |
 | 20 | Holding | 7209 | `extra_hot_water` | 0–1440 min |
 | 21 | Holding | 1215 | `electric_heater_allowed` | on/off |
-| 22 | Holding | B21B | `electric_heater_max_power` | 1–4 |
-| 23 | Holding | 1233 | `external_control` | on/off |
+| 22 | Holding | B21B | `electric_heater_max_power` | 1 (3 kW), 2 (6 kW) or 4 (9 kW) |
+| 23 | Holding | 1233 | `external_control` | on/off, write-only |
 | 24 | Holding | 020A | `summer_mode` | 0–30 °C |
-| 25 | Holding | 2210 | `holiday_mode` | 0–30 |
-| 26 | Holding | 12F2 | `alarm_reset` | write 1 |
+| 25 | Holding | 2210 | `holiday_mode` | 0–30 days |
+| 26 | Holding | 12F2 | `alarm_reset` | write 0 to reset |
 | 27 | Input | 1A01 | `compressor` | |
 | 28 | Input | 1A02 | `add_heat_step_1` | |
 | 29 | Input | 1A03 | `add_heat_step_2` | |
 | 30 | Input | 1A04 | `pump_cold_circuit` | |
 | 31 | Input | 1A05 | `pump_heat_circuit` | |
 | 32 | Input | 1A06 | `pump_radiator` | |
-| 33 | Input | 1A07 | `switch_valve_1` | |
+| 33 | Input | 1A07 | `switch_valve_1` | off: heating, on: hot water |
 | 34 | Input | 1A20 | `alarm` | |
-| 35 | Input | BA91 | `alarm_code` | |
+| 35 | Input | BA91 | `alarm_code` | last alarm, see below |
 | 36 | Input | 6C55 | `compressor_hours_heating` | |
 | 37 | Input | 6C56 | `compressor_hours_hot_water` | |
 | 38 | Input | 6C58 | `aux_heater_hours_heating` | |
@@ -153,7 +153,42 @@ Temperatures and numbers are signed, the others unsigned. A temperature sensor t
 
 `power_consumption` and `accumulated_consumption` are calculated by the H66 from the wattages set for each status variable on its web page. `accumulated_consumption` restarts at 0 when the H66 boots.
 
-Not yet verified: `room_sensor_influence` is read unscaled because the H66 web page shows it that way, and the unit and scale of `holiday_mode` are unknown.
+The meanings and ranges come from Husdata's [variable list for Rego 600/637](https://online.husdata.se/h-docs/C00.pdf). Some details from it:
+
+- `alarm_code` is the last alarm that triggered, even if no alarm is active now. `alarm_text(code)` and `ALARM_CODES` give its description.
+- `external_control` is write-only: the value read back means nothing. Husdata warns it can behave unpredictably on a Rego 600.
+- `electric_heater_allowed` takes effect the next time the electric heater would start.
+- `holiday_mode` is in days. While it is active, set it to 0 before setting a new value.
+
+Not yet verified: `room_sensor_influence` is read unscaled because the H66 web page shows it that way, and `holiday_mode` is assumed to be stored ×10 like the other 2xxx numbers.
+
+### Alarm codes
+
+| Code | Alarm |
+|---|---|
+| 1 | Sensor radiator return (GT1) |
+| 2 | Outdoor sensor (GT2) |
+| 3 | Sensor hot water (GT3) |
+| 4 | Mixing valve sensor (GT4) |
+| 5 | Room sensor (GT5) |
+| 6 | Sensor compressor (GT6) |
+| 7 | Sensor heat fluid out (GT8) |
+| 8 | Sensor heat fluid in (GT9) |
+| 9 | Sensor cold fluid in (GT10) |
+| 10 | Sensor cold fluid out (GT11) |
+| 11 | Compressor circuit switch |
+| 12 | Electrical cassette |
+| 13 | Pump circuit switch (MB2) |
+| 14 | Low pressure switch (LP) |
+| 15 | High pressure switch (HP) |
+| 16 | High return HP (GT9) |
+| 17 | Heat carrier out max (GT8) |
+| 18 | Brine in under limit (GT10) |
+| 19 | Brine out under limit (GT11) |
+| 20 | Compressor superheat (GT6) |
+| 21 | 3-phase incorrect order |
+| 22 | Power failure |
+| 23 | Heat delta exceeded |
 
 ## Development
 

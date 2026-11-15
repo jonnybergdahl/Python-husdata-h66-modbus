@@ -36,6 +36,9 @@ def _validator(register: Register) -> Any:
             value = int(value)
         if not isinstance(value, int | float) or math.isnan(value):
             raise ValueError(f"{register.key}: {value!r} is not a number")
+        if register.options is not None and value not in register.options:
+            allowed = ", ".join(str(o) for o in register.options)
+            raise ValueError(f"{register.key}: {value} is not one of {allowed}")
         if register.minimum is not None and value < register.minimum:
             raise ValueError(f"{register.key}: {value} is below {register.minimum}")
         if register.maximum is not None and value > register.maximum:
@@ -158,5 +161,9 @@ class HusdataH66(Device):
         await self.heat_pump.write(key, value)
 
     async def async_reset_alarm(self) -> None:
-        """Reset an active heat pump alarm."""
-        await self.async_set("alarm_reset", 1)
+        """Reset an active heat pump alarm.
+
+        Writes 0 to Alarm reset, which makes the heat pump turn off for
+        10 seconds and then on again.
+        """
+        await self.async_set("alarm_reset", 0)

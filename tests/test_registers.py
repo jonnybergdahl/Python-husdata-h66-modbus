@@ -5,8 +5,10 @@ from __future__ import annotations
 import pytest
 
 from husdata_h66 import (
+    ALARM_CODES,
     REGO600_REGISTERS,
     VariableKind,
+    alarm_text,
     kind_from_variable_id,
     parse_controller,
     parse_firmware_version,
@@ -75,3 +77,18 @@ def test_parse_registers_handles_moved_and_custom_registers() -> None:
 def test_parse_registers_without_table() -> None:
     with pytest.raises(ValueError):
         parse_registers("<html><body>Login</body></html>")
+
+
+def test_alarm_codes() -> None:
+    assert sorted(ALARM_CODES) == list(range(1, 24))
+    assert alarm_text(19) == "Brine out under limit (GT11)"
+    assert alarm_text(0) is None
+    assert alarm_text(None) is None
+
+
+def test_setting_metadata() -> None:
+    registers = {r.key: r for r in REGO600_REGISTERS}
+    assert registers["electric_heater_max_power"].options == (1, 2, 4)
+    assert registers["external_control"].write_only
+    assert not registers["room_setpoint"].write_only
+    assert registers["holiday_mode"].unit == "d"

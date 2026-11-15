@@ -89,13 +89,13 @@ async def test_set_writes_scaled_value(unit: MockModbusUnit) -> None:
     assert all(w.register_type == "holding" for w in writes)
 
 
-async def test_reset_alarm_writes_one(unit: MockModbusUnit) -> None:
+async def test_reset_alarm_writes_zero(unit: MockModbusUnit) -> None:
     writes: list[WriteEvent] = []
     unit.on_write(writes.append)
 
     await HusdataH66(unit).async_reset_alarm()
 
-    assert [(w.address, w.values) for w in writes] == [(26, [1])]
+    assert [(w.address, w.values) for w in writes] == [(26, [0])]
 
 
 @pytest.mark.parametrize(
@@ -104,6 +104,7 @@ async def test_reset_alarm_writes_one(unit: MockModbusUnit) -> None:
         ("room_setpoint", 4.9),
         ("room_setpoint", 29.5),
         ("room_setpoint", 21.05),
+        ("electric_heater_max_power", 3),
         ("electric_heater_max_power", 5),
         ("electric_heater_max_power", 1.5),
         ("heat_curve", float("nan")),
@@ -154,3 +155,15 @@ def test_duplicate_keys_rejected(unit: MockModbusUnit) -> None:
     register = make_register("0007", 6, "Outdoor", writable=False)
     with pytest.raises(ValueError, match="duplicate"):
         HusdataH66(unit, [register, register])
+
+
+@pytest.mark.parametrize("value", [1, 2, 4])
+async def test_electric_heater_max_power_accepts_its_steps(
+    unit: MockModbusUnit, value: int
+) -> None:
+    writes: list[WriteEvent] = []
+    unit.on_write(writes.append)
+
+    await HusdataH66(unit).async_set("electric_heater_max_power", value)
+
+    assert [(w.address, w.values) for w in writes] == [(22, [value])]

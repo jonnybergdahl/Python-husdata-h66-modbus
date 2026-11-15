@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "husdata-h66-modbus"
-version = "0.1.0"
+version = "0.1.1"
 description = "Async Modbus TCP library for the Husdata H66 heat pump gateway"
 readme = "README.md"
 license = "MIT"
