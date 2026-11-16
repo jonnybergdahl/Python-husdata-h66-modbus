@@ -257,9 +257,9 @@ it:
 - ``holiday_mode`` is in whole days, stored unscaled (unlike the other
   2xxx numbers, which are ×10). While it is active, set it to 0 before
   setting a new value.
-- ``extra_hot_water``: on a Rego 600, a value written over Modbus shows on
-  the H66 web page for about 20 seconds and is then reset to 0, and no hot
-  water production starts. How to set it is still unknown.
+- ``extra_hot_water``: on a Rego 600, a value written over Modbus shows
+  on the H66 web page for about 20 seconds and is then reset to 0, and
+  no hot water production starts. How to set it is still unknown.
 
 Not yet verified: ``room_sensor_influence`` is read unscaled because the
 H66 web page shows it that way.
