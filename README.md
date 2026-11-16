@@ -158,9 +158,10 @@ The meanings and ranges come from Husdata's [variable list for Rego 600/637](htt
 - `alarm_code` is the last alarm that triggered, even if no alarm is active now. `alarm_text(code)` and `ALARM_CODES` give its description.
 - `external_control` is write-only: the value read back means nothing. Husdata warns it can behave unpredictably on a Rego 600.
 - `electric_heater_allowed` takes effect the next time the electric heater would start.
-- `holiday_mode` is in days. While it is active, set it to 0 before setting a new value.
+- `holiday_mode` is in whole days, stored unscaled (unlike the other 2xxx numbers, which are ×10). While it is active, set it to 0 before setting a new value.
+- `extra_hot_water`: on a Rego 600, a value written over Modbus shows on the H66 web page for about 20 seconds and is then reset to 0, and no hot water production starts. How to set it is still unknown.
 
-Not yet verified: `room_sensor_influence` is read unscaled because the H66 web page shows it that way, and `holiday_mode` is assumed to be stored ×10 like the other 2xxx numbers.
+Not yet verified: `room_sensor_influence` is read unscaled because the H66 web page shows it that way.
 
 ### Alarm codes
 

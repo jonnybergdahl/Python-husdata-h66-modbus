@@ -197,8 +197,11 @@ KNOWN_VARIABLES: dict[str, _Known] = {
     ),
     "020A": _Known(key="summer_mode", minimum=0, maximum=30, step=0.1),
     # Days. While it is active, set it to 0 before setting a new value. The
-    # scale (0.1 like other 2xxx numbers) is not verified yet.
-    "2210": _Known(key="holiday_mode", unit="d", minimum=0, maximum=30, step=1),
+    # register holds whole days, not tenths like other 2xxx variables: writing
+    # raw 10 showed "10.0" on the H66 web page (verified on a Rego 600).
+    "2210": _Known(
+        key="holiday_mode", unit="d", scale=1, minimum=0, maximum=30, step=1
+    ),
     # Writing 0 resets an alarm: the heat pump turns off for 10 s and back on.
     "12F2": _Known(key="alarm_reset", minimum=0, maximum=1, step=1),
 }

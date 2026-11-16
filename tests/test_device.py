@@ -79,12 +79,14 @@ async def test_set_writes_scaled_value(unit: MockModbusUnit) -> None:
     await device.async_set("heat_curve_parallel", -1.5)
     await device.async_set("extra_hot_water", 120)
     await device.async_set("electric_heater_allowed", False)
+    await device.async_set("holiday_mode", 1)
 
     assert [(w.address, w.values) for w in writes] == [
         (14, [215]),
         (17, [0x10000 - 15]),
         (20, [120]),
         (21, [0]),
+        (25, [1]),
     ]
     assert all(w.register_type == "holding" for w in writes)
 

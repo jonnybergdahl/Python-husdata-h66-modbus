@@ -254,12 +254,15 @@ it:
   Husdata warns it can behave unpredictably on a Rego 600.
 - ``electric_heater_allowed`` takes effect the next time the electric
   heater would start.
-- ``holiday_mode`` is in days. While it is active, set it to 0 before
+- ``holiday_mode`` is in whole days, stored unscaled (unlike the other
+  2xxx numbers, which are ×10). While it is active, set it to 0 before
   setting a new value.
+- ``extra_hot_water``: on a Rego 600, a value written over Modbus shows on
+  the H66 web page for about 20 seconds and is then reset to 0, and no hot
+  water production starts. How to set it is still unknown.
 
 Not yet verified: ``room_sensor_influence`` is read unscaled because the
-H66 web page shows it that way, and ``holiday_mode`` is assumed to be
-stored ×10 like the other 2xxx numbers.
+H66 web page shows it that way.
 
 Alarm codes
 ~~~~~~~~~~~
